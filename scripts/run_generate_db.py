@@ -70,6 +70,13 @@ def create_database_from_csv(csv_dir='./FinData', db_name='financial_data.db'):
         '报告类型': 'TEXT'
     }
 
+    # 定义需要保持为字符串的字段（这些字段即使是数字也不应该被转换为浮点数）
+    text_fields = {
+        '基金代码', '对应股票代码', '股票代码', '交易日期', '交易日',
+        '持仓日期', '截止日期', '公告日期', '成立日期', '到期日期',
+        '定期报告所属年度'
+    }
+
     # 连接数据库（如果文件不存在会自动创建）
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
@@ -85,9 +92,30 @@ def create_database_from_csv(csv_dir='./FinData', db_name='financial_data.db'):
             table_name = csv_file.stem
             print(f"\n处理文件: {csv_file.name} -> 表名: {table_name}")
 
-            # 读取CSV文件
-            df = pd.read_csv(csv_file, encoding='utf-8')
+            # 先读取第一行获取列名
+            df_sample = pd.read_csv(csv_file, encoding='utf-8', nrows=0)
+            columns = df_sample.columns.tolist()
+
+            # 为需要保持为字符串的字段指定 dtype
+            dtype_dict = {}
+            for col in columns:
+                if col in text_fields:
+                    dtype_dict[col] = str
+
+            # 读取CSV文件，指定需要保持为字符串的字段
+            df = pd.read_csv(csv_file, encoding='utf-8', dtype=dtype_dict)
             print(f"  读取到 {len(df)} 行数据，字段: {list(df.columns)}")
+
+            # 处理所有 TEXT 类型的字段，去除可能的小数点
+            for col in df.columns:
+                if field_types.get(col, 'TEXT') == 'TEXT' and col in df.columns:
+                    # 将列转换为字符串
+                    df[col] = df[col].astype(str)
+                    # 去除 .0 后缀（但保留真正的小数点，如 0.70%）
+                    # 使用正则表达式：匹配以数字开头，以.0结尾的字符串
+                    df[col] = df[col].str.replace(r'\.0$', '', regex=True)
+                    # 将 'nan' 或 'NaN' 替换为 None（SQLite的NULL）
+                    df[col] = df[col].replace(['nan', 'NaN', 'None'], None)
 
             # 创建表的SQL语句
             create_table_sql = f"CREATE TABLE IF NOT EXISTS [{table_name}] (\n"
@@ -114,13 +142,13 @@ def create_database_from_csv(csv_dir='./FinData', db_name='financial_data.db'):
             cursor.executemany(insert_sql, data)
             conn.commit()
 
-            # # 将DataFrame数据写入数据库
-            # df.to_sql(table_name, conn, if_exists='append', index=False)
-
             print(f"  成功导入 {len(df)} 条数据到表 {table_name}")
 
         except Exception as e:
             print(f"  处理文件 {csv_file.name} 时出错: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            conn.rollback()
 
     # 获取并显示所有表的信息
     print("\n" + "=" * 50)
@@ -180,7 +208,7 @@ def verify_database(db_name='financial_data.db'):
 if __name__ == "__main__":
     # 设置文件路径
     csv_directory = r'E:\PAFinQASystem\DATA\FinData'  # CSV文件目录
-    database_file = r'E:\PAFinQASystem\DATA\fina_data.db'  # 输出的数据库文件名
+    database_file = r'E:\PAFinQASystem\PAFinQASystem-ds\data\fin_data.db'  # 输出的数据库文件名
 
     # 检查目录是否存在
     if not os.path.exists(csv_directory):
