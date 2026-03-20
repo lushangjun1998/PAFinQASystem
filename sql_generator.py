@@ -10,13 +10,9 @@ from utils import get_table_schema, execute_sql
 class SQLGenerator:
     """SQL生成器，使用公司内网Qwen3-235B-A22B-2507模型"""
 
-    def __init__(self):
+    def __init__(self, retriever):
         # 初始化检索器
-        self.retriever = HybridFieldRetriever()
-
-        # 初始化OpenAI兼容客户端（使用公司内网模型）
-        print(f"连接公司内网模型: {config.LLM_MODEL_NAME}")
-        print(f"API地址: {config.LLM_API_BASE}")
+        self.retriever = retriever  # HybridFieldRetriever()
 
         self.llm = ChatOpenAI(
             model=config.LLM_MODEL_NAME,
@@ -46,14 +42,15 @@ class SQLGenerator:
 {context}
 
 【重要要求】
-1. 只输出SQL语句，不要任何解释、不要添加```sql标记、不要添加任何额外文字
-2. 使用SQLite语法
-3. 如果问题涉及"数量"、"多少"等词，通常需要使用COUNT(*)
-4. 如果问题涉及"最大"、"最小"等词，通常需要使用MAX/MIN和ORDER BY
-5. 如果问题涉及"差额"，需要计算两个字段的差值
-6. 如果问题涉及日期，注意日期格式转换（SQLite中可以使用strftime或直接比较）
-7. 如果需要多表关联，使用JOIN on关联字段
-8. 确保SQL正确且高效
+1. 只输出SQL语句，不要任何解释、不要添加任何额外文字;
+2. 对于包含有括号的字段名，例如：昨收盘(元)、成交量(股)，生成sql时要用双引号包裹字段名，以免sql不能运行;
+2. 使用SQLite语法;
+3. 如果问题涉及"数量"、"多少"等词，通常需要使用COUNT(*);
+4. 如果问题涉及"最大"、"最小"等词，通常需要使用MAX/MIN和ORDER BY;
+5. 如果问题涉及"差额"，需要计算两个字段的差值;
+6. 如果问题涉及日期，注意日期格式转换（SQLite中可以使用strftime或直接比较）;
+7. 如果需要多表关联，使用JOIN on关联字段;
+8. 确保SQL正确且高效;
 
 直接输出SQL语句：""".strip()
         )
@@ -72,7 +69,8 @@ class SQLGenerator:
 
     def _get_context(self, question):
         """获取检索到的上下文"""
-        return self.retriever.get_relevant_context(question)
+        context = self.retriever.get_relevant_context(question)
+        return context
 
     def _get_db_schema(self):
         """获取数据库完整schema"""
