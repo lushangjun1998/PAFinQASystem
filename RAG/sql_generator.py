@@ -3,32 +3,39 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 import config
-from retriever import HybridFieldRetriever
 from utils import get_table_schema, execute_sql
-
+from langchain_ollama import ChatOllama
+import re
 
 class SQLGenerator:
-    """SQL生成器，使用公司内网Qwen3-235B-A22B-2507模型"""
+    """SQL生成器"""
 
     def __init__(self, retriever):
         # 初始化检索器
         self.retriever = retriever  # HybridFieldRetriever()
 
-        self.llm = ChatOpenAI(
-            model=config.LLM_MODEL_NAME,
-            openai_api_base=config.LLM_API_BASE,
-            openai_api_key=config.LLM_API_KEY
-            # temperature=0.1,  # 低温度保证确定性输出
-            # max_tokens=1024,
-            # top_p=0.9,
-            # frequency_penalty=0,
-            # presence_penalty=0,
-            # timeout=30,  # 30秒超时
-            # max_retries=2,
-            # model_kwargs={
-            #     "stop": ["</s>", "```"],  # 设置停止标记
-            # }
+        # 本地大模型
+        self.llm = ChatOllama(
+            model="qwen3:8b",  # 本地Ollama部署的模型名称
+            base_url="http://localhost:11434",  # Ollama默认端口
+            temperature=0.7
         )
+        # 云端API
+        # self.llm = ChatOpenAI(
+        #     model=config.LLM_MODEL_NAME,
+        #     openai_api_base=config.LLM_API_BASE,
+        #     openai_api_key=config.LLM_API_KEY
+        #     # temperature=0.1,  # 低温度保证确定性输出
+        #     # max_tokens=1024,
+        #     # top_p=0.9,
+        #     # frequency_penalty=0,
+        #     # presence_penalty=0,
+        #     # timeout=30,  # 30秒超时
+        #     # max_retries=2,
+        #     # model_kwargs={
+        #     #     "stop": ["</s>", "```"],  # 设置停止标记
+        #     # }
+        # )
 
         # SQL生成提示模板（优化后的prompt）
         self.sql_prompt = PromptTemplate(
@@ -55,7 +62,7 @@ class SQLGenerator:
 7. 如果需要多表关联，使用JOIN on关联字段;
 8. 确保SQL正确且高效;
 
-直接输出SQL语句：""".strip()
+直接输出SQL语句：/no_think """.strip()
         )
 
         # 构建处理链
@@ -99,6 +106,7 @@ class SQLGenerator:
     def _clean_sql(self, sql: str) -> str:
         """清理生成的SQL"""
         sql = sql.strip()
+        sql = re.sub(r'<think>.*?</think>', '', sql, flags=re.DOTALL).strip()
 
         # 移除可能的markdown代码块标记
         if sql.startswith("```sql"):
