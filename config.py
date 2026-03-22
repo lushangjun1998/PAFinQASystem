@@ -13,7 +13,7 @@ EMBEDDING_MODEL = r"E:\PAFinQASystem\PAFinQASystem\model_dir\BAAI\bge-large-zh-v
 # 大模型配置
 LLM_MODEL_NAME = "qwen3-coder-next"
 LLM_API_BASE = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-LLM_API_KEY = "sk-748acc62358b435c93edfd3c499266fd"
+LLM_API_KEY = ""
 LLM_API_TYPE = "openai"  # API类型
 
 # 检索配置
