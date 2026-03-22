@@ -35,7 +35,10 @@ python -m scripts.run_data_prepare
 ```python
 python -m scripts.run_test_retrieve --input E:\PAFinQASystem\DATA\示例问题公开.xlsx >> .\results\log\run_test_retrieve.log
 ```
-**部分结果如下，全部结果见：[results/log/run_test_retrieve.log]**
+**部分结果如下，全部结果见：**
+* 结果文件，包含问题，检索到的指标名：[results/task1_retrieval_results.csv](results/task1_retrieval_results.csv)
+* 脚本运行log文件：[results/log/run_test_retrieve.log](results/log/run_test_retrieve.log)
+
 ```
 开始匹配，共 300 个问题...
 ================================================================================
@@ -79,13 +82,15 @@ matched fields:  基金日行情表-资产净值, 基金日行情表-累计单�
 
 ### 3. 任务2：SQL生成
 **描述:**
-基于上一步原词的识别结果，生成问题对应的SQL代码（用时10S以内，时间越短越好）。
+基于上一步原词的识别结果，生成问题对应的SQL代码（用时10s以内，时间越短越好）。
 
 #### 3.1 生成SQLite db文件
 **命令：**
 ```python
-python -m scripts.run_generate_db
+python -m scripts.run_generate_db >> .\results\log\run_generate_db.log
 ```
+生成的fin_data.db导入DBeaver结果如下：
+![dbeaver.png](results/fig/dbeaver.png)
 
 
 
@@ -98,7 +103,10 @@ python -m scripts.run_test_sql_generate \
 --execute-sql True \
 >> .\results\log\run_test_sql_generate_api.log
 ```
-**部分结果如下，全部结果见：[run_test_sql_generate_api.log](./results/log/run_test_sql_generate_api.log)和[task2_sql_generation_results_local.csv](results/task2_sql_generation_results_local.csv)**
+**部分结果如下，全部结果见：
+* 结果文件，包括问题、生成的sql、用时、执行情况等信息：[task2_sql_generation_results_local.csv](results/task2_sql_generation_results_local.csv)**
+* 脚本运行log文件：[run_test_sql_generate_api.log](./results/log/run_test_sql_generate_api.log)
+
 ```
 开始测试，共 300 个问题...
 ================================================================================
@@ -162,7 +170,9 @@ python -m scripts.run_test_sql_generate \
 --execute-sql True \
 >> .\results\log\run_test_sql_generate_local.log
 ```
-**部分结果如下，全部结果见：[run_test_sql_generate_local.log](results/log/run_test_sql_generate_local.log)和[task2_sql_generation_results_local.csv](results/task2_sql_generation_results_local.csv)**
+**部分结果如下，全部结果见：
+* 结果文件，包括问题、生成的sql、用时、执行情况等信息：[task2_sql_generation_results_local.csv](results/task2_sql_generation_results_local.csv)
+* 脚本运行log文件：[run_test_sql_generate_local.log](results/log/run_test_sql_generate_local.log)
 ```
 开始测试，共 100 个问题...
 ================================================================================
