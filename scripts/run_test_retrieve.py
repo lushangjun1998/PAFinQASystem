@@ -120,9 +120,9 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description='任务1：匹配指标维度名')
-    parser.add_argument('--input', type=str, default=r'E:\PAFinQASystem\DATA\示例问题公开.xlsx',
+    parser.add_argument('--input', type=str, default=r'E:\PAFinQASystem\DATA\xxx.xlsx',
                         help='输入的问题文件路径')
-    parser.add_argument('--output', type=str, default=r'E:\PAFinQASystem\PAFinQASystem-ds\results\task1_retrieval_results.csv',
+    parser.add_argument('--output', type=str, default=r'E:\PAFinQASystem\PAFinQASystem\results\task1_retrieval_results.csv',
                         help='输出结果文件路径')
     parser.add_argument('--question-col', type=str, default='question',
                         help='问题列名')

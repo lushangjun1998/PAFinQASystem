@@ -208,7 +208,7 @@ def verify_database(db_name='financial_data.db'):
 if __name__ == "__main__":
     # 设置文件路径
     csv_directory = r'E:\PAFinQASystem\DATA\FinData'  # CSV文件目录
-    database_file = r'E:\PAFinQASystem\PAFinQASystem-ds\data\fin_data.db'  # 输出的数据库文件名
+    database_file = r'E:\PAFinQASystem\PAFinQASystem\data\fin_data.db'  # 输出的数据库文件名
 
     # 检查目录是否存在
     if not os.path.exists(csv_directory):

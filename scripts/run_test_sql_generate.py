@@ -254,12 +254,12 @@ def main():
     parser = argparse.ArgumentParser(description='测试任务2：生成SQL代码')
     parser.add_argument('--input', type=str, default=r'E:\PAFinQASystem\DATA\示例问题公开.xlsx',
                         help='输入的问题文件路径')
-    parser.add_argument('--output', type=str, default=r'E:\PAFinQASystem\PAFinQASystem-ds\results\sql_generation_results.csv',
+    parser.add_argument('--output', type=str, default=r'E:\PAFinQASystem\PAFinQASystem\results\task2_sql_generation_results_api.csv',
                         help='输出结果文件路径')
     parser.add_argument('--question-col', type=str, default='question',
                         help='问题列名')
-    parser.add_argument('--sample-size', type=int, default=20,
-                        help='随机抽样的问题数量（固定随机种子）')
+    parser.add_argument('--sample-size', type=int, default=None,
+                        help='随机抽样的问题数量')
     parser.add_argument('--random-seed', type=int, default=42,
                         help='随机种子')
     parser.add_argument('--execute-sql', type=bool, default=False,

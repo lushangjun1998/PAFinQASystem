@@ -22,7 +22,7 @@ TOP_K_TABLES = 5   # 召回相关表数量
 
 # SQL生成配置
 MAX_SQL_RETRY = 1
-SQL_TIMEOUT = 10
+SQL_TIMEOUT = 5
 
 # 数据库配置
 DB_TYPE = "sqlite"
