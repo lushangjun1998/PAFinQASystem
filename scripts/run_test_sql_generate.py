@@ -7,31 +7,38 @@
 
 import pandas as pd
 import time
-import json
-import sqlite3
 from pathlib import Path
-from typing import Dict, Any, Tuple, Optional
-import sys
+from typing import Dict, Any, Tuple
+import random
 
 # 导入项目模块
-from sql_generator import SQLGenerator
-from executor import SQLExecutor
-from retriever import HybridFieldRetriever
-import config
+from RAG.sql_generator import SQLGenerator
+from RAG.executor import SQLExecutor
+from RAG.retriever import HybridFieldRetriever
 
 
 class SQLTester:
     """SQL生成测试器 - 用于任务2"""
 
-    def __init__(self):
-        """初始化测试器"""
+    def __init__(self, execute_sql: bool = True):
+        """
+        初始化测试器
+
+        Args:
+            execute_sql: 是否执行SQL，默认为True
+        """
         print("初始化SQL测试器...")
         start_time = time.time()
 
         # 初始化SQL生成器和执行器
         self.retriever = HybridFieldRetriever()
         self.generator = SQLGenerator(self.retriever)
-        self.executor = SQLExecutor()
+        self.execute_sql = execute_sql
+        if self.execute_sql:
+            self.executor = SQLExecutor()
+        else:
+            self.executor = None
+            print("注意：SQL执行功能已禁用，仅生成SQL不执行")
 
         init_time = time.time() - start_time
         print(f"初始化完成，耗时: {init_time:.2f}秒")
@@ -63,9 +70,9 @@ class SQLTester:
         # except Exception as e:
         #     return f"ERROR: {e}"
 
-    def generate_and_execute(self, question: str) -> Tuple[str, str, float, Dict[str, Any]]:
+    def generate_and_execute(self, question: str) -> Tuple[str, Dict[str, Any]]:
         """
-        生成SQL并执行
+        生成SQL并可选执行
         返回：(sql, first_value, 总耗时, 执行详情)
         """
 
@@ -75,19 +82,31 @@ class SQLTester:
             sql = self.generator.generate_sql(question)
             sql_time = round(time.time() - sql_start, 3)
 
-            # 执行SQL
-            exec_result = self.executor.execute(sql)
+            # 根据配置决定是否执行SQL
+            if self.execute_sql:
+                # 执行SQL
+                exec_result = self.executor.execute_with_timeout(sql)
 
-            # 获取第一个值
-            first_value = self.get_first_value(exec_result)
+                # 获取第一个值
+                first_value = self.get_first_value(exec_result)
 
-            details = {
-                'sql_generation_time': sql_time,
-                'success': exec_result.get('success', False),
-                'res_count': exec_result.get('res_count', 0),
-                'error': exec_result.get('error', ''),
-                'first_value': first_value
-            }
+                details = {
+                    'sql_generation_time': sql_time,
+                    'success': exec_result.get('success', False),
+                    'res_count': exec_result.get('res_count', 0),
+                    'error': exec_result.get('error', ''),
+                    'first_value': first_value
+                }
+            else:
+                # 不执行SQL，只生成
+                first_value = "NOT_EXECUTED"
+                details = {
+                    'sql_generation_time': sql_time,
+                    'success': True,  # 生成成功视为成功
+                    'res_count': 0,
+                    'error': '',
+                    'first_value': first_value
+                }
 
             return sql, details
 
@@ -95,17 +114,32 @@ class SQLTester:
             return f"ERROR: {str(e)}"
 
     def batch_test(self, questions_df: pd.DataFrame, output_path: Path = None,
-                   sample_limit: int = None) -> pd.DataFrame:
+                   sample_size: int = None, random_seed: int = 42) -> pd.DataFrame:
         """
-        测试SQL生成
+        批量测试SQL生成
+
+        Args:
+            questions_df: 问题DataFrame
+            output_path: 输出文件路径
+            sample_size: 随机抽样的数量，如果为None则使用全部数据
+            random_seed: 随机种子，默认为42
         """
         results = []
         gen_times = []
 
+        # 设置随机种子
+        random.seed(random_seed)
+
+        # 随机抽样
         total_questions = len(questions_df)
-        if sample_limit:
-            total_questions = min(sample_limit, total_questions)
-            questions_df = questions_df.head(total_questions)
+        if sample_size and sample_size < total_questions:
+            # 随机选择指定数量的索引
+            sampled_indices = random.sample(range(total_questions), sample_size)
+            questions_df = questions_df.iloc[sampled_indices].reset_index(drop=True)
+            total_questions = sample_size
+            print(f"\n随机抽样 {sample_size} 个问题")
+        else:
+            print(f"\n使用全部 {total_questions} 个问题")
 
         print(f"\n开始测试，共 {total_questions} 个问题...")
         print("=" * 80)
@@ -114,6 +148,7 @@ class SQLTester:
         error_count = 0
 
         for idx, row in questions_df.iterrows():
+            time.sleep(0.5)
             question = row['question']
 
             # 生成并执行SQL
@@ -144,6 +179,8 @@ class SQLTester:
             print(f"已处理 {idx + 1}/{total_questions} 个问题...")
             print("question: ", question)
             print("generated sql: \n", sql)
+            print("first value: \n", result_row['first_value'])
+            print(f"generated sql time: {details.get('sql_generation_time')}\n")
             print("-" * 50)
             # print(f"当前成功率: {success_count / (idx + 1) * 100:.1f}%")
 
@@ -154,22 +191,19 @@ class SQLTester:
         if gen_times:
             max_time = max(gen_times)
             min_time = min(gen_times)
-            avg_time = sum(gen_times) / len(gen_times)
+            avg_time = round(sum(gen_times) / len(gen_times), 3)
             total_time_sum = sum(gen_times)
 
-            # 计算SQL生成阶段的平均时间
-            avg_gen_time = results_df['sql_gen_time(s)'].mean()
-            # avg_exec_time = results_df['sql_exec_time(s)'].mean()
 
             stats = {
                 'index': 'STATS',
                 'question': f'统计信息 (成功率: {success_count}/{total_questions})',
                 'generated_sql': f'总耗时: {total_time_sum:.3f}s, 最长: {max_time:.3f}s, 最短: {min_time:.3f}s, 平均: {avg_time:.3f}s',
-                # 'first_value': f'最长: {max_time:.3f}s, 最短: {min_time:.3f}s, 平均: {avg_time:.3f}s',
-                'sql_gen_time(s)': avg_gen_time,
-                # 'success': success_count,
-                # 'row_count': error_count,
-                # 'error': f''
+                'first_value': "",
+                'sql_gen_time(s)': avg_time,
+                'success': success_count,
+                'res_count': "",
+                'error': f''
             }
             results_df = pd.concat([results_df, pd.DataFrame([stats])], ignore_index=True)
 
@@ -200,14 +234,15 @@ def test_single_question(tester: SQLTester, question: str):
     print(f"\n测试问题: {question}")
     print("-" * 50)
 
-    sql, first_value, total_time, details = tester.generate_and_execute(question)
+    sql, details = tester.generate_and_execute(question)
 
     print(f"生成的SQL:\n{sql}")
-    print(f"\n第一个值: {first_value}")
-    print(f"总耗时: {total_time * 1000:.2f}ms")
-    print(f"SQL生成耗时: {details.get('sql_generation_time', 0) * 1000:.2f}ms")
-    print(f"SQL执行耗时: {details.get('sql_execution_time', 0) * 1000:.2f}ms")
-    print(f"执行状态: {'成功' if details.get('success') else '失败'}")
+    print(f"\n第一个值: {details.get('first_value')}")
+    print(f"SQL生成耗时: {details.get('sql_generation_time')}s")
+
+    if tester.execute_sql:
+        print(f"执行状态: {'成功' if details.get('success') else '失败'}")
+
     if details.get('error'):
         print(f"错误信息: {details.get('error')}")
 
@@ -223,19 +258,23 @@ def main():
                         help='输出结果文件路径')
     parser.add_argument('--question-col', type=str, default='question',
                         help='问题列名')
-    parser.add_argument('--limit', type=int, default=10,
-                        help='限制测试的问题数量（用于快速测试）')
-    parser.add_argument('--test_single_question', type=str, default=None,
-                        help='测试单个问题（用于调试）')
+    parser.add_argument('--sample-size', type=int, default=20,
+                        help='随机抽样的问题数量（固定随机种子）')
+    parser.add_argument('--random-seed', type=int, default=42,
+                        help='随机种子')
+    parser.add_argument('--execute-sql', type=bool, default=False,
+                        help='是否执行SQL')
+    parser.add_argument('--test-single', type=str, # default="我想知道股票600322在申万行业分类下的二级行业是什么？用最新的数据。",
+                        help='测试单个问题')
 
     args = parser.parse_args()
 
     # 初始化测试器
-    tester = SQLTester()
+    tester = SQLTester(execute_sql=args.execute_sql)
 
     # 如果指定了单个问题测试
-    if args.test_single_question:
-        test_single_question(tester, args.test_single_question)
+    if args.test_single:
+        test_single_question(tester, args.test_single)
         return
 
     # 检查输入文件
@@ -263,18 +302,7 @@ def main():
 
     # 测试
     output_path = Path(args.output)
-    results_df = tester.batch_test(df, output_path, args.limit)
-
-    # # 打印前5个示例结果
-    # print("\n" + "=" * 80)
-    # print("前5个测试结果示例:")
-    # print("=" * 80)
-    # for idx, row in results_df.head(5).iterrows():
-    #     if row['index'] != 'STATS':
-    #         print(f"\n问题 {idx + 1}: {row['question'][:50]}...")
-    #         print(f"SQL: {row['generated_sql'][:100]}...")
-    #         print(f"第一个值: {row['first_value']}")
-    #         print(f"总耗时: {row['total_time_ms']:.2f}ms")
+    results_df = tester.batch_test(df, output_path, args.sample_size, args.random_seed)
 
     print("\n测试完成！")
 
