@@ -39,7 +39,7 @@ class SQLGenerator:
 
         # SQL生成提示模板（优化后的prompt）
         self.sql_prompt = PromptTemplate(
-            input_variables=["question", "context", "db_schema"],
+            input_variables=["question", "context"],    # , "db_schema"
             template="""你是一个金融数据领域的SQL专家。请根据用户问题、相关字段信息和相关数据库表结构，生成正确的SQLite查询语句。
 
 【用户问题】
@@ -48,8 +48,6 @@ class SQLGenerator:
 【相关字段信息】
 {context}
 
-【所有数据库表信息】
-{db_schema}
 
 【重要要求】
 1. 只输出SQL语句，不要任何解释、不要添加任何额外文字;
@@ -68,8 +66,8 @@ class SQLGenerator:
         # 构建处理链
         self.chain = (
                 {"question": RunnablePassthrough(),
-                 "context": lambda x: self._get_context(x),
-                 "db_schema": lambda x: self._get_db_schema()
+                 "context": lambda x: self._get_context(x)
+                 # "db_schema": lambda x: self._get_db_schema()
                 }
                 | self.sql_prompt
                 | self.llm
