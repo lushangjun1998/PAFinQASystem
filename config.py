@@ -8,7 +8,7 @@ VECTOR_STORE_PATH = BASE_DIR / "vector_store"
 FIELD_KNOWLEDGE_PATH = BASE_DIR / "data/field_knowledge.json"
 
 # 模型配置
-EMBEDDING_MODEL = "model_dir/BAAI/bge-large-zh-v1.5"
+EMBEDDING_MODEL = r"E:\PAFinQASystem\PAFinQASystem\model_dir\BAAI\bge-large-zh-v1.5"
 
 # 公司内网大模型配置
 LLM_MODEL_NAME = "qwen3-coder-next"

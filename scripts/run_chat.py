@@ -1,8 +1,8 @@
 import time
 import argparse
-from sql_generator import SQLGenerator
-from executor import SQLExecutor
-from retriever import HybridFieldRetriever
+from RAG.sql_generator import SQLGenerator
+from RAG.executor import SQLExecutor
+from RAG.retriever import HybridFieldRetriever
 from scripts.run_data_prepare import FieldKnowledgeBase
 
 

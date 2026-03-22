@@ -25,11 +25,11 @@ class FieldKnowledgeBase:
         # 为每个字段创建文档
         for field_info in knowledge['fields']:
             # 构建文档内容
-            content = f"表名: {field_info['table']}\n"
-            content += f"字段名: {field_info['field']}\n"
-            content += f"描述: {field_info['description']}\n"
-            content += f"同义词: {', '.join(field_info['synonyms'])}\n"
-            content += f"示例: {', '.join(str(e) for e in field_info['examples'])}"
+            content = f"字段名: {field_info['field']}, "
+            content += f"所属表名: {field_info['table']}, "
+            content += f"字段描述: {field_info['description']}, "
+            content += f"同义词: {', '.join(field_info['synonyms'])}, "
+            content += f"数据示例: {','.join(str(e) for e in field_info['examples'])};\n"
 
             # 创建元数据
             metadata = {
@@ -42,24 +42,24 @@ class FieldKnowledgeBase:
             doc = Document(page_content=content, metadata=metadata)
             documents.append(doc)
 
-            # 为每个同义词也创建一个文档（提高召回率）
-            for synonym in field_info['synonyms']:
-                synonym_content = f"表名: {field_info['table']}\n"
-                synonym_content += f"字段名: {field_info['field']}\n"
-                synonym_content += f"同义词: {synonym}\n"
-                synonym_content += f"描述: {field_info['description']}"
-
-                synonym_doc = Document(
-                    page_content=synonym_content,
-                    metadata={**metadata, 'synonym': synonym}
-                )
-                documents.append(synonym_doc)
+            # # 为每个同义词也创建一个文档（提高召回率）
+            # for synonym in field_info['synonyms']:
+            #     synonym_content = f"表名: {field_info['table']}\n"
+            #     synonym_content += f"字段名: {field_info['field']}\n"
+            #     synonym_content += f"同义词: {synonym}\n"
+            #     synonym_content += f"描述: {field_info['description']}"
+            #
+            #     synonym_doc = Document(
+            #         page_content=synonym_content,
+            #         metadata={**metadata, 'synonym': synonym}
+            #     )
+            #     documents.append(synonym_doc)
 
         # 为表创建文档
         for table_info in knowledge['tables']:
-            content = f"表名: {table_info['name']}\n"
-            content += f"描述: {table_info['description']}\n"
-            content += f"字段: {', '.join(table_info['fields'])}"
+            content = f"表名: {table_info['name']}, "
+            content += f"数据表描述: {table_info['description']}, "
+            content += f"该表所有字段: {', '.join(table_info['fields'])};\n"
 
             metadata = {
                 'table': table_info['name'],

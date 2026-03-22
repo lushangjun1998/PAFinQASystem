@@ -7,13 +7,11 @@
 
 import pandas as pd
 import time
-import json
 from pathlib import Path
 from typing import List, Dict, Any, Tuple
-import sys
 
 # 导入项目模块
-from retriever import HybridFieldRetriever
+from RAG.retriever import HybridFieldRetriever
 from utils import load_json
 import config
 
@@ -43,7 +41,7 @@ class FieldMatcher:
         start_time = time.time()
 
         # 使用检索器获取相关字段
-        fields, tables = self.retriever.retrieve_fields(question)
+        pages, fields, tables = self.retriever.retrieve_fields(question)
 
         elapsed_time = round(time.time() - start_time, 3)
 
@@ -160,19 +158,6 @@ def main():
     # 检索
     output_path = Path(args.output)
     results_df = matcher.batch_match(df, output_path)
-
-    # # 打印前5个示例结果
-    # print("\n" + "=" * 80)
-    # print("前5个匹配结果示例:")
-    # print("=" * 80)
-    # for idx, row in results_df.head(5).iterrows():
-    #     if row['index'] != 'STATS':
-    #         print(f"\n问题 {idx + 1}: {row['question'][:50]}...")
-    #         print(f"匹配时间: {row['match_time_ms']:.2f}ms")
-    #         print(f"匹配字段数: {row['matched_fields_count']}")
-    #         matched_fields = json.loads(row['matched_fields'])
-    #         for field in matched_fields[:3]:  # 只显示前3个
-    #             print(f"  - 表: {field['table']}, 字段: {field['field']}")
 
     print("\n测试完成！")
 
