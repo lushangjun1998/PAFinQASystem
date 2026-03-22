@@ -21,18 +21,18 @@ class SQLExecutor:
                 'sql': sql,
                 'data': results,
                 'formatted': format_results(results),
-                'row_count': len(results)
+                'res_count': len(results)
             }
         except Exception as e:
             return {
                 'success': False,
                 'sql': sql,
-                'error': str(e),
                 'data': [],
-                'formatted': f"执行错误: {str(e)}"
+                'formatted': f"执行错误: {str(e)}",
+                'error': str(e)
             }
 
-    def execute_with_timeout(self, sql: str, timeout: int = 10) -> Dict[str, Any]:
+    def execute_with_timeout(self, sql: str, timeout: int = 5) -> Dict[str, Any]:
         """带超时的SQL执行"""
         import threading
         import time
