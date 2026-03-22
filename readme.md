@@ -27,7 +27,7 @@ python -m scripts.run_data_prepare
 
 从下面所给的数据涉及的指标维度数据中，匹配question中出现的指标维度名：question中出现的词并不是数据库表中的标准原词，用时控制在2s之内，1s内最佳。
 
-运用所提供的全部测试问题集[示例问题公开.xlsx]进行指标匹配，观察其匹配时间。
+运用所提供 **"示例问题公开.xlsx"** 中的全部测试问题集进行指标匹配，观察其匹配时间。
 
 **注：这一步并没有用到GPU，Embedding模型运行在CPU上。**
 
@@ -35,10 +35,11 @@ python -m scripts.run_data_prepare
 ```python
 python -m scripts.run_test_retrieve --input E:\PAFinQASystem\DATA\示例问题公开.xlsx >> .\results\log\run_test_retrieve.log
 ```
-**部分结果如下，全部结果见：**
+**全部结果见：**
 * 结果文件，包含问题，检索到的指标名：[results/task1_retrieval_results.csv](results/task1_retrieval_results.csv)
 * 脚本运行log文件：[results/log/run_test_retrieve.log](results/log/run_test_retrieve.log)
 
+**部分结果如下:**
 ```
 开始匹配，共 300 个问题...
 ================================================================================
@@ -103,10 +104,11 @@ python -m scripts.run_test_sql_generate \
 --execute-sql True \
 >> .\results\log\run_test_sql_generate_api.log
 ```
-**部分结果如下，全部结果见：
-* 结果文件，包括问题、生成的sql、用时、执行情况等信息：[task2_sql_generation_results_local.csv](results/task2_sql_generation_results_local.csv)**
+**全部结果见:**
+* 结果文件，包括问题、生成的sql、用时、执行情况等信息：[task2_sql_generation_results_local.csv](results/task2_sql_generation_results_local.csv)
 * 脚本运行log文件：[run_test_sql_generate_api.log](./results/log/run_test_sql_generate_api.log)
 
+**部分结果如下：**
 ```
 开始测试，共 300 个问题...
 ================================================================================
@@ -170,9 +172,11 @@ python -m scripts.run_test_sql_generate \
 --execute-sql True \
 >> .\results\log\run_test_sql_generate_local.log
 ```
-**部分结果如下，全部结果见：
+**全部结果见：**
 * 结果文件，包括问题、生成的sql、用时、执行情况等信息：[task2_sql_generation_results_local.csv](results/task2_sql_generation_results_local.csv)
 * 脚本运行log文件：[run_test_sql_generate_local.log](results/log/run_test_sql_generate_local.log)
+
+**部分结果如下:**
 ```
 开始测试，共 100 个问题...
 ================================================================================
